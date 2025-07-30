@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar con MSVC",
+      "type": "shell",
+      "command": "cl",
+      "args": [
+        "/EHsc",
+        "/I", "SFML-2.5.1\\include",
+        "src\\main.cpp",
+        "/link",
+        "/LIBPATH:SFML-2.5.1\\lib",
+        "sfml-graphics.lib",
+        "sfml-window.lib",
+        "sfml-system.lib"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$msCompile"]
+    }
+  ]
+}

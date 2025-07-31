@@ -182,6 +182,37 @@ int main() {
                 }
             }
         }
+        if (!caminoDFS.empty()) {
+            for (size_t i = 1; i < caminoDFS.size(); ++i) {
+                long long id1 = caminoDFS[i - 1];
+                long long id2 = caminoDFS[i];
+                if (nodos.count(id1) && nodos.count(id2)) {
+                    sf::Vector2f p1(nodos[id1].x, nodos[id1].y);
+                    sf::Vector2f p2(nodos[id2].x, nodos[id2].y);
+                    sf::Vector2f dir = p2 - p1;
+                    float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+
+                    if (len > 0.1f) {
+                        sf::RectangleShape linea(sf::Vector2f(len, 2.5f));
+                        linea.setOrigin(0, 1.25f);
+                        linea.setFillColor(sf::Color::Red); // Distinto color para DFS
+                        linea.setPosition(p1);
+                        linea.setRotation(std::atan2(dir.y, dir.x) * 180 / 3.14159265f);
+                        window.draw(linea);
+                    }
+                }
+            }
+
+            for (auto id : caminoDFS) {
+                if (nodos.count(id)) {
+                    sf::CircleShape punto(2.5f);
+                    punto.setFillColor(sf::Color::Red);
+                    punto.setOrigin(2.5f, 2.5f);
+                    punto.setPosition(nodos[id].x, nodos[id].y);
+                    window.draw(punto);
+                }
+            }
+        }
 
         // Dibujar solo los nodos que forman parte de alguna calle (way con highway)
         std::set<long long> nodosEnCalles;

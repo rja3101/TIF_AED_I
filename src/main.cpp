@@ -11,13 +11,17 @@
 #include "CargadorOSM.h"
 #include "Grafo.h"
 #include "BFS.h"
+#include "DFS.h"
+#include "Dijkstra.h"
 
 using namespace tinyxml2;
 
 std::map<long long, Nodo> nodos;
 std::vector<std::vector<long long>> calles;
 Grafo grafo;
-std::vector<long long> caminoBFS;
+//std::vector<long long> caminoBFS;
+//std::vector<long long> caminoDFS;
+std::vector<long long> caminoDijkstra;
 
 double minLat = 999, maxLat = -999;
 double minLon = 999, maxLon = -999;
@@ -59,7 +63,7 @@ long long encontrarNodoCercano(float mouseX, float mouseY) {
 int main() {
     const int WIDTH = 1000, HEIGHT = 700;
 
-    if (!cargarMapa("src/grafo_multilinea_conectado.osm", nodos, calles, minLat, maxLat, minLon, maxLon)) {
+    if (!cargarMapa("src/map.osm", nodos, calles, minLat, maxLat, minLon, maxLon)) {
         return -1;
     }
 
@@ -113,14 +117,27 @@ int main() {
                         nodoDestino = seleccionado;
                         std::cout << "Nodo B seleccionado: " << nodoDestino << "\n";
 
-                        caminoBFS = bfs(grafo, nodoInicio, nodoDestino);
+                        /*caminoBFS = bfs(grafo, nodoInicio, nodoDestino);
                         std::cout << "Camino BFS tiene " << caminoBFS.size() << " nodos\n";
-                        for (auto id : caminoBFS) std::cout << id << " ";
+                        for (auto id : caminoBFS) std::cout << id << " ";*/
+
+                        /*caminoDFS = DFS::buscarDFS(grafo, nodoInicio, nodoDestino);
+                        std::cout << "Camino DFS tiene " << caminoDFS.size() << " nodos\n";
+                        for (auto id : caminoDFS) std::cout << id << " ";
+                        std::cout << "\n";*/
+
+                        caminoDijkstra = Dijkstra::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                        std::cout << "Camino Dijkstra tiene " << caminoDijkstra.size() << " nodos\n";
+                        for (auto id : caminoDijkstra) std::cout << id << " ";
                         std::cout << "\n";
+
                     } else {
                         nodoInicio = seleccionado;
                         nodoDestino = -1;
-                        caminoBFS.clear();
+                        //caminoBFS.clear();
+                        //caminoDFS.clear();
+                        caminoDijkstra.clear();
+
                         std::cout << "Nodo A cambiado a: " << nodoInicio << "\n";
                     }
                 }
@@ -150,7 +167,7 @@ int main() {
             }
         }
 
-        if (!caminoBFS.empty()) {
+        /*if (!caminoBFS.empty()) {
             for (size_t i = 1; i < caminoBFS.size(); ++i) {
                 long long id1 = caminoBFS[i - 1];
                 long long id2 = caminoBFS[i];
@@ -170,7 +187,7 @@ int main() {
                     }
                 }
             }
-
+            
             // Dibujar puntos rojos sobre el camino
             for (auto id : caminoBFS) {
                 if (nodos.count(id)) {
@@ -181,8 +198,8 @@ int main() {
                     window.draw(punto);
                 }
             }
-        }
-        if (!caminoDFS.empty()) {
+        }*/
+        /*if (!caminoDFS.empty()) {
             for (size_t i = 1; i < caminoDFS.size(); ++i) {
                 long long id1 = caminoDFS[i - 1];
                 long long id2 = caminoDFS[i];
@@ -207,6 +224,36 @@ int main() {
                 if (nodos.count(id)) {
                     sf::CircleShape punto(2.5f);
                     punto.setFillColor(sf::Color::Red);
+                    punto.setOrigin(2.5f, 2.5f);
+                    punto.setPosition(nodos[id].x, nodos[id].y);
+                    window.draw(punto);
+                }
+            }
+        }*/
+
+        if (!caminoDijkstra.empty()) {
+            for (size_t i = 1; i < caminoDijkstra.size(); ++i) {
+                long long id1 = caminoDijkstra[i - 1];
+                long long id2 = caminoDijkstra[i];
+                if (nodos.count(id1) && nodos.count(id2)) {
+                    sf::Vector2f p1(nodos[id1].x, nodos[id1].y);
+                    sf::Vector2f p2(nodos[id2].x, nodos[id2].y);
+                    float len = std::sqrt((p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y));
+                    if (len > 0.1f) {
+                        sf::RectangleShape linea(sf::Vector2f(len, 2.5f));
+                        linea.setOrigin(0, 1.25f);
+                        linea.setFillColor(sf::Color::Green);
+                        linea.setPosition(p1);
+                        linea.setRotation(std::atan2(p2.y - p1.y, p2.x - p1.x) * 180 / 3.14159265f);
+                        window.draw(linea);
+                    }
+                }
+            }
+
+            for (auto id : caminoDijkstra) {
+                if (nodos.count(id)) {
+                    sf::CircleShape punto(2.5f);
+                    punto.setFillColor(sf::Color::Green);
                     punto.setOrigin(2.5f, 2.5f);
                     punto.setPosition(nodos[id].x, nodos[id].y);
                     window.draw(punto);

@@ -13,6 +13,7 @@
 #include "BFS.h"
 #include "DFS.h"
 #include "Dijkstra.h"
+#include "BestFirst.h"
 
 using namespace tinyxml2;
 
@@ -21,7 +22,8 @@ std::vector<std::vector<long long>> calles;
 Grafo grafo;
 //std::vector<long long> caminoBFS;
 //std::vector<long long> caminoDFS;
-std::vector<long long> caminoDijkstra;
+//std::vector<long long> caminoDijkstra;
+std::vector<long long> caminoBest;
 
 double minLat = 999, maxLat = -999;
 double minLon = 999, maxLon = -999;
@@ -126,17 +128,25 @@ int main() {
                         for (auto id : caminoDFS) std::cout << id << " ";
                         std::cout << "\n";*/
 
-                        caminoDijkstra = Dijkstra::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                        /*caminoDijkstra = Dijkstra::buscar(grafo, nodos, nodoInicio, nodoDestino);
                         std::cout << "Camino Dijkstra tiene " << caminoDijkstra.size() << " nodos\n";
                         for (auto id : caminoDijkstra) std::cout << id << " ";
+                        std::cout << "\n";*/
+
+                        caminoBest = BestFirst::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                        std::cout << "Camino Best First Search tiene " << caminoBest.size() << " nodos\n";
+                        for (auto id : caminoBest) std::cout << id << " ";
                         std::cout << "\n";
+
 
                     } else {
                         nodoInicio = seleccionado;
                         nodoDestino = -1;
                         //caminoBFS.clear();
                         //caminoDFS.clear();
-                        caminoDijkstra.clear();
+                        //caminoDijkstra.clear();
+                        caminoBest.clear();
+
 
                         std::cout << "Nodo A cambiado a: " << nodoInicio << "\n";
                     }
@@ -231,7 +241,7 @@ int main() {
             }
         }*/
 
-        if (!caminoDijkstra.empty()) {
+        /*if (!caminoDijkstra.empty()) {
             for (size_t i = 1; i < caminoDijkstra.size(); ++i) {
                 long long id1 = caminoDijkstra[i - 1];
                 long long id2 = caminoDijkstra[i];
@@ -259,7 +269,38 @@ int main() {
                     window.draw(punto);
                 }
             }
+        }*/
+
+        if (!caminoBest.empty()) {
+            for (size_t i = 1; i < caminoBest.size(); ++i) {
+                long long id1 = caminoBest[i - 1];
+                long long id2 = caminoBest[i];
+                if (nodos.count(id1) && nodos.count(id2)) {
+                    sf::Vector2f p1(nodos[id1].x, nodos[id1].y);
+                    sf::Vector2f p2(nodos[id2].x, nodos[id2].y);
+                    float len = std::sqrt((p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y));
+                    if (len > 0.1f) {
+                        sf::RectangleShape linea(sf::Vector2f(len, 2.5f));
+                        linea.setOrigin(0, 1.25f);
+                        linea.setFillColor(sf::Color::Yellow);
+                        linea.setPosition(p1);
+                        linea.setRotation(std::atan2(p2.y - p1.y, p2.x - p1.x) * 180 / 3.14159265f);
+                        window.draw(linea);
+                    }
+                }
+            }
+
+            for (auto id : caminoBest) {
+                if (nodos.count(id)) {
+                    sf::CircleShape punto(2.5f);
+                    punto.setFillColor(sf::Color::Yellow);
+                    punto.setOrigin(2.5f, 2.5f);
+                    punto.setPosition(nodos[id].x, nodos[id].y);
+                    window.draw(punto);
+                }
+            }
         }
+
 
         // Dibujar solo los nodos que forman parte de alguna calle (way con highway)
         std::set<long long> nodosEnCalles;

@@ -2,7 +2,8 @@
 #define UTILIDADES_H
 
 #include "Nodo.h"
-#include<cmath>
+#include <cmath>
+
 // Versión original, pasando el Nodo completo
 inline void convertirCoordenadas(Nodo& n, int w, int h,
                                  double minLat, double maxLat,

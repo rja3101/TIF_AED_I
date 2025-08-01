@@ -2,10 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <tinyxml2.h>
 #include <iostream>
-#include <cmath>
-#include <map>
-#include <set>
-#include <vector>
+
+#include "MyVector.h"
+
 #include "Nodo.h"
 #include "Utilidades.h"
 #include "CargadorOSM.h"
@@ -15,6 +14,7 @@
 #include "Dijkstra.h"
 #include "BestFirst.h"
 #include "AStar.h"
+#include"Map.h"
 #include <chrono>
 
 using namespace tinyxml2;
@@ -31,14 +31,29 @@ enum AlgoritmoBusqueda {
 int algoritmoActual = BFS_ALG;
 
 
-std::map<long long, Nodo> nodos;
-std::vector<std::vector<long long>> calles;
+std::map<long long, Nodo> nodos; // SOLO VISUAL
+
+// DESPUES LOS DEMAS -------------------------------------------
+Map<long long, Nodo> nodosMapAStar;
+Map<long long, Nodo> nodosMapBest; 
+Map<long long, Nodo> nodosMapDij; 
+
+MyVector<MyVector<long long>> calles;
+
+
+
 Grafo grafo;
-std::vector<long long> caminoBFS;
-std::vector<long long> caminoDFS;
-std::vector<long long> caminoDijkstra;
-std::vector<long long> caminoBest;
-std::vector<long long> caminoAStar;
+
+//Vector sin std::vector
+MyVector<long long> caminoAStar;
+MyVector<long long> caminoBest;
+MyVector<long long> caminoBFS;
+MyVector<long long> caminoDFS;
+MyVector<long long> caminoDijkstra;
+
+
+
+
 
 double minLat = 999, maxLat = -999;
 double minLon = 999, maxLon = -999;
@@ -78,6 +93,21 @@ long long encontrarNodoCercano(float mouseX, float mouseY) {
 }
 
 int main() {
+
+    Map<long long, const char*> etiquetasNodos;
+
+    etiquetasNodos.insert(17, "Catedral de AQP");
+    etiquetasNodos.insert(170, "Plaza de Armas");
+    etiquetasNodos.insert(613, "UTP");
+    etiquetasNodos.insert(567, "San Pablo");
+    etiquetasNodos.insert(705, "Outlet Arauco");
+    etiquetasNodos.insert(411, "Monasterio de Sta. Catalina");
+    etiquetasNodos.insert(330, "U. Catolica de Sta. María");
+    etiquetasNodos.insert(204, "UNSA");
+    etiquetasNodos.insert(125, "Honorio Delgado");
+    etiquetasNodos.insert(811, "UNSA Medicina");
+
+//VISUAL -------------------------------------------------------------------------------------------------------
     const int WIDTH = 1000, HEIGHT = 700;
 
     if (!cargarMapa("src/map.osm", nodos, calles, minLat, maxLat, minLon, maxLon)) {
@@ -114,7 +144,12 @@ int main() {
 
 
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Mapa de Arequipa - Calles");
+    sf::Font fuente;
+    if (!fuente.loadFromFile("arial.ttf")) {
+        std::cerr << "No se pudo cargar la fuente.\n";
+    }
 
+//----------------------------------------------------------------------
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -166,7 +201,7 @@ int main() {
 
                         if (algoritmoActual == DIJKSTRA_ALG || algoritmoActual == TODOS) {
                             auto inicio = std::chrono::high_resolution_clock::now();
-                            caminoDijkstra = Dijkstra::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                            caminoDijkstra = Dijkstra::buscar(grafo, nodosMapDij, nodoInicio, nodoDestino);
                             auto fin = std::chrono::high_resolution_clock::now();
                             std::chrono::duration<double, std::milli> duracion = fin - inicio;
                             std::cout << "Dijkstra tomo: " << duracion.count() << " ms\n";
@@ -176,7 +211,7 @@ int main() {
 
                         if (algoritmoActual == BEST_FIRST_ALG || algoritmoActual == TODOS) {
                             auto inicio = std::chrono::high_resolution_clock::now();
-                            caminoBest = BestFirst::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                            caminoBest = BestFirst::buscar(grafo, nodosMapBest, nodoInicio, nodoDestino);
                             auto fin = std::chrono::high_resolution_clock::now();
                             std::chrono::duration<double, std::milli> duracion = fin - inicio;
                             std::cout << "Best-First Search tomo: " << duracion.count() << " ms\n";
@@ -186,13 +221,14 @@ int main() {
 
                         if (algoritmoActual == ASTAR_ALG || algoritmoActual == TODOS) {
                             auto inicio = std::chrono::high_resolution_clock::now();
-                            caminoAStar = AStar::buscar(grafo, nodos, nodoInicio, nodoDestino);
+                            caminoAStar = AStar::buscar(grafo, nodosMapAStar, nodoInicio, nodoDestino);
                             auto fin = std::chrono::high_resolution_clock::now();
                             std::chrono::duration<double, std::milli> duracion = fin - inicio;
                             std::cout << "A* tomo: " << duracion.count() << " ms\n";
                         } else {
-                            caminoAStar.clear();
+                            caminoAStar.clear(); 
                         }
+
 
 
                     } else {
@@ -345,7 +381,8 @@ int main() {
                 }
             }
 
-            for (auto id : caminoBest) {
+            for (size_t i = 0; i < caminoBest.size(); ++i) {
+                long long id = caminoBest[i];
                 if (nodos.count(id)) {
                     sf::CircleShape punto(2.5f);
                     punto.setFillColor(sf::Color::Yellow);
@@ -355,6 +392,8 @@ int main() {
                 }
             }
         }
+
+        //A*
         if (!caminoAStar.empty()) {
             for (size_t i = 1; i < caminoAStar.size(); ++i) {
                 long long id1 = caminoAStar[i - 1];
@@ -387,15 +426,15 @@ int main() {
 
 
         // Dibujar solo los nodos que forman parte de alguna calle (way con highway)
-        std::set<long long> nodosEnCalles;
+        Set<long long> nodosEnCalles;
         for (const auto& calle : calles) {
             for (auto id : calle) {
                 nodosEnCalles.insert(id);
             }
         }
 
-        for (long long id : nodosEnCalles) {
-            if (!nodos.count(id)) continue;
+        nodosEnCalles.for_each([&](const long long& id) {
+            if (!nodos.count(id)) return;
 
             const Nodo& nodo = nodos[id];
             sf::CircleShape punto;
@@ -414,7 +453,28 @@ int main() {
             punto.setOrigin(punto.getRadius(), punto.getRadius());
             punto.setPosition(nodo.x, nodo.y);
             window.draw(punto);
+        });
+
+        for (int i = 0; i < MAP_CAPACIDAD; ++i) {
+            Par<long long, const char*>* actual = etiquetasNodos.getBucket(i);
+            while (actual) {
+                long long id = actual->key;
+                const char* nombre = actual->value;
+
+                if (nodos.count(id)) {
+                    sf::Text texto;
+                    texto.setFont(fuente);
+                    texto.setString(nombre);  // const char* funciona con setString
+                    texto.setCharacterSize(10);
+                    texto.setFillColor(sf::Color::Black);
+                    texto.setPosition(nodos[id].x + 5, nodos[id].y + 5);
+                    window.draw(texto);
+                }
+
+                actual = actual->next;
+            }
         }
+
 
         window.display();
     }

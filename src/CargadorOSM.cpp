@@ -1,11 +1,14 @@
 #include "CargadorOSM.h"
 #include <tinyxml2.h>
 #include <iostream>
+#include <cmath>
+#include "MyVector.h"
+
 using namespace tinyxml2;
 
 bool cargarMapa(const char* archivo,
                 std::map<long long, Nodo>& nodos,
-                std::vector<std::vector<long long>>& calles,
+                MyVector<MyVector<long long>>& calles,
                 double& minLat, double& maxLat,
                 double& minLon, double& maxLon) {
 
@@ -38,7 +41,7 @@ bool cargarMapa(const char* archivo,
 
     // Leer calles (solo highways)
     for (XMLElement* e = root->FirstChildElement("way"); e; e = e->NextSiblingElement("way")) {
-        std::vector<long long> nodosWay;
+        MyVector<long long> nodosWay;
         bool esCalle = false;
 
         for (XMLElement* n = e->FirstChildElement(); n != nullptr; n = n->NextSiblingElement()) {

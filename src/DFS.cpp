@@ -1,8 +1,9 @@
 #include "DFS.h"
 #include "Grafo.h"
-#include <set>
+#include "Set.h"
+#include "MyVector.h"
 
-static bool dfsUtil(Grafo& grafo, long long actual, long long destino, std::set<long long>& visitado, std::vector<long long>& camino) {
+static bool dfsUtil(Grafo& grafo, long long actual, long long destino, Set<long long>& visitado, MyVector<long long>& camino) {
     visitado.insert(actual);
     camino.push_back(actual);
 
@@ -12,20 +13,20 @@ static bool dfsUtil(Grafo& grafo, long long actual, long long destino, std::set<
     Arista* vecino = vertice ? vertice->adyacentes : nullptr;
 
     while (vecino != nullptr) {
-        if (visitado.find(vecino->destino) == visitado.end()) {
+        if (!visitado.contains(vecino->destino)) {
             if (dfsUtil(grafo, vecino->destino, destino, visitado, camino))
                 return true;
         }
         vecino = vecino->siguiente;
     }
 
-    camino.pop_back(); // backtrack
+    camino.pop_back(); 
     return false;
 }
 
-std::vector<long long> DFS::buscarDFS(Grafo& grafo, long long inicio, long long destino) {
-    std::set<long long> visitado;
-    std::vector<long long> camino;
+MyVector<long long> DFS::buscarDFS(Grafo& grafo, long long inicio, long long destino) {
+    Set<long long> visitado;
+    MyVector<long long> camino;
     dfsUtil(grafo, inicio, destino, visitado, camino);
     return camino;
 }

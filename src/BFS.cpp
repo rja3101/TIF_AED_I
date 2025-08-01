@@ -1,15 +1,15 @@
 #include "BFS.h"
-#include <queue>
-#include <map>
-#include <algorithm>
+#include "Queue.h"
+#include "Map.h"
+#include "MyVector.h"
 
-std::vector<long long> bfs(Grafo& grafo, long long inicio, long long destino) {
-    std::queue<long long> cola;
-    std::map<long long, long long> padre;
-    std::map<long long, bool> visitado;
+MyVector<long long> bfs(Grafo& grafo, long long inicio, long long destino) {
+    Queue<long long> cola;
+    Map<long long, long long> padre;
+    Map<long long, bool> visitado;
 
     cola.push(inicio);
-    visitado[inicio] = true;
+    visitado.insert(inicio, true);
 
     while (!cola.empty()) {
         long long actual = cola.front();
@@ -22,20 +22,34 @@ std::vector<long long> bfs(Grafo& grafo, long long inicio, long long destino) {
 
         for (Arista* a = vertice->adyacentes; a != nullptr; a = a->siguiente) {
             long long vecino = a->destino;
-            if (!visitado[vecino]) {
-                visitado[vecino] = true;
-                padre[vecino] = actual;
+            bool yaVisitado = false;
+            visitado.get(vecino, yaVisitado);
+            if (!yaVisitado) {
+                visitado.insert(vecino, true);
+                padre.insert(vecino, actual);
                 cola.push(vecino);
             }
         }
     }
 
-    std::vector<long long> camino;
-    if (!visitado[destino]) return camino;
+    MyVector<long long> camino;
+    bool encontrado = false;
+    visitado.get(destino, encontrado);
+    if (!encontrado) return camino;
 
-    for (long long v = destino; v != inicio; v = padre[v])
+    long long v = destino;
+    while (v != inicio) {
         camino.push_back(v);
+        padre.get(v, v);
+    }
     camino.push_back(inicio);
-    std::reverse(camino.begin(), camino.end());
+
+    // Revertir camino manualmente
+    for (int i = 0, j = camino.size() - 1; i < j; ++i, --j) {
+        long long temp = camino[i];
+        camino[i] = camino[j];
+        camino[j] = temp;
+    }
+
     return camino;
 }

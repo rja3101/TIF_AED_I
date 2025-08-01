@@ -1,10 +1,10 @@
 #ifndef CALLE_H
 #define CALLE_H
 
-#include <vector>
+#include "MyVector.h"
 
 struct Calle {
-    std::vector<long long> nodosRef;
+    MyVector<long long> nodosRef;
 };
 
 #endif

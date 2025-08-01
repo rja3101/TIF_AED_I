@@ -1,31 +1,35 @@
 #include "Dijkstra.h"
 #include "Grafo.h"
-#include <map>
-#include <set>
-#include <limits>
-#include <cmath>
+#include "Map.h"
+#include "Set.h"
+#include "Nodo.h"
+#include "MyVector.h"
+#include <cmath>  // ← sí puedes usar esto, es estándar pero no STL
+#include "MathUtils.h"
 
+// Calcula la distancia euclidiana entre dos nodos
 double distanciaEntre(Nodo& a, Nodo& b) {
     double dx = a.x - b.x;
     double dy = a.y - b.y;
     return std::sqrt(dx * dx + dy * dy);
 }
 
-std::vector<long long> Dijkstra::buscar(Grafo& grafo, std::map<long long, Nodo>& nodos, long long inicio, long long destino) {
-    std::map<long long, double> distancia;
-    std::map<long long, long long> previo;
-    std::set<std::pair<double, long long>> cola; // (distancia, nodo)
+MyVector<long long> Dijkstra::buscar(Grafo& grafo, Map<long long, Nodo>& nodos, long long inicio, long long destino) {
+    Map<long long, double> distancia;
+    Map<long long, long long> previo;
+    Set<std::pair<double, long long>> cola;
 
     for (Vertice* v = grafo.obtenerListaVertices(); v != nullptr; v = v->siguiente) {
-        distancia[v->id] = std::numeric_limits<double>::infinity();
+        distancia.insert(v->id, std::numeric_limits<double>::infinity());
     }
 
-    distancia[inicio] = 0;
+    distancia.insert(inicio, 0);
     cola.insert({0, inicio});
 
     while (!cola.empty()) {
-        long long actual = cola.begin()->second;
-        cola.erase(cola.begin());
+        std::pair<double, long long> parMin = cola.get_min();
+        long long actual = parMin.second;
+        cola.erase(parMin);
 
         if (actual == destino) break;
 
@@ -34,24 +38,45 @@ std::vector<long long> Dijkstra::buscar(Grafo& grafo, std::map<long long, Nodo>&
 
         while (arista != nullptr) {
             long long vecino = arista->destino;
-            double peso = distanciaEntre(nodos[actual], nodos[vecino]);
 
-            if (distancia[actual] + peso < distancia[vecino]) {
-                cola.erase({distancia[vecino], vecino});
-                distancia[vecino] = distancia[actual] + peso;
-                previo[vecino] = actual;
-                cola.insert({distancia[vecino], vecino});
+            Nodo nodoActual, nodoVecino;
+            nodos.get(actual, nodoActual);
+            nodos.get(vecino, nodoVecino);
+
+            double peso = distanciaEntre(nodoActual, nodoVecino);
+            double distActual;
+            distancia.get(actual, distActual);
+
+            double nuevaDistancia = distActual + peso;
+
+            double distVecino;
+            distancia.get(vecino, distVecino);
+
+            if (nuevaDistancia < distVecino) {
+                cola.erase({distVecino, vecino});
+                distancia.insert(vecino, nuevaDistancia);
+                previo.insert(vecino, actual);
+                cola.insert({nuevaDistancia, vecino});
             }
+
             arista = arista->siguiente;
         }
     }
 
-    std::vector<long long> camino;
-    if (previo.find(destino) == previo.end()) return camino;
+    MyVector<long long> inverso;
+    if (!previo.contains(destino)) return inverso;
 
-    for (long long at = destino; at != inicio; at = previo[at])
-        camino.insert(camino.begin(), at);
-    camino.insert(camino.begin(), inicio);
+    long long at = destino;
+    while (at != inicio) {
+        inverso.push_back(at);
+        previo.get(at, at);
+    }
+    inverso.push_back(inicio);
+
+    MyVector<long long> camino;
+    for (int i = inverso.size() - 1; i >= 0; --i) {
+        camino.push_back(inverso[i]);
+    }
 
     return camino;
 }

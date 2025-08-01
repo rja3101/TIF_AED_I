@@ -1,6 +1,7 @@
 // Grafo.cpp
 #include "Grafo.h"
 #include <iostream>
+#include <cmath>
 
 Grafo::Grafo() {
     listaVertices = nullptr;
@@ -34,7 +35,6 @@ Vertice* Grafo::buscarVertice(long long id) {
     return nullptr;
 }
 
-// NUEVA FUNCIÓN
 Vertice* Grafo::obtenerListaVertices() {
     return listaVertices;
 }

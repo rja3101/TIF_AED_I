@@ -2,8 +2,8 @@
 #define BFS_H
 
 #include "Grafo.h"
-#include <vector>
+#include "MyVector.h"
 
-std::vector<long long> bfs(Grafo& grafo, long long inicio, long long destino);
+MyVector<long long> bfs(Grafo& grafo, long long inicio, long long destino);
 
 #endif
